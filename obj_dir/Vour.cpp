@@ -94,3 +94,4 @@ VL_ATTR_COLD void Vour::final() {
 const char* Vour::hierName() const { return vlSymsp->name(); }
 const char* Vour::modelName() const { return "Vour"; }
 unsigned Vour::threads() const { return 1; }
+
