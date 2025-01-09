@@ -1,0 +1,64 @@
+Performing C++ SOURCE FILE Test _fbracket_depth_4096 failed with the following output:
+Change Dir: /home/gf/Desktop/ysyx/test_our/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_d7e87/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_d7e87.dir/build.make CMakeFiles/cmTC_d7e87.dir/build
+gmake[1]: Entering directory '/home/gf/Desktop/ysyx/test_our/build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_d7e87.dir/src.cxx.o
+/usr/bin/c++ -D_fbracket_depth_4096  -fbracket-depth=4096 -o CMakeFiles/cmTC_d7e87.dir/src.cxx.o -c /home/gf/Desktop/ysyx/test_our/build/CMakeFiles/CMakeTmp/src.cxx
+c++: error: unrecognized command-line option '-fbracket-depth=4096'
+gmake[1]: *** [CMakeFiles/cmTC_d7e87.dir/build.make:78: CMakeFiles/cmTC_d7e87.dir/src.cxx.o] Error 1
+gmake[1]: Leaving directory '/home/gf/Desktop/ysyx/test_our/build/CMakeFiles/CMakeTmp'
+gmake: *** [Makefile:127: cmTC_d7e87/fast] Error 2
+
+
+Source file was:
+int main() { return 0; }
+Performing C++ SOURCE FILE Test _mno_cet failed with the following output:
+Change Dir: /home/gf/Desktop/ysyx/test_our/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_c656f/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_c656f.dir/build.make CMakeFiles/cmTC_c656f.dir/build
+gmake[1]: Entering directory '/home/gf/Desktop/ysyx/test_our/build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_c656f.dir/src.cxx.o
+/usr/bin/c++ -D_mno_cet  -mno-cet -o CMakeFiles/cmTC_c656f.dir/src.cxx.o -c /home/gf/Desktop/ysyx/test_our/build/CMakeFiles/CMakeTmp/src.cxx
+c++: error: unrecognized command-line option '-mno-cet'; did you mean '-mno-aes'?
+gmake[1]: *** [CMakeFiles/cmTC_c656f.dir/build.make:78: CMakeFiles/cmTC_c656f.dir/src.cxx.o] Error 1
+gmake[1]: Leaving directory '/home/gf/Desktop/ysyx/test_our/build/CMakeFiles/CMakeTmp'
+gmake: *** [Makefile:127: cmTC_c656f/fast] Error 2
+
+
+Source file was:
+int main() { return 0; }
+Performing C++ SOURCE FILE Test _Qunused_arguments failed with the following output:
+Change Dir: /home/gf/Desktop/ysyx/test_our/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_b535e/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_b535e.dir/build.make CMakeFiles/cmTC_b535e.dir/build
+gmake[1]: Entering directory '/home/gf/Desktop/ysyx/test_our/build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_b535e.dir/src.cxx.o
+/usr/bin/c++ -D_Qunused_arguments  -Qunused-arguments -o CMakeFiles/cmTC_b535e.dir/src.cxx.o -c /home/gf/Desktop/ysyx/test_our/build/CMakeFiles/CMakeTmp/src.cxx
+c++: error: unrecognized command-line option '-Qunused-arguments'
+gmake[1]: *** [CMakeFiles/cmTC_b535e.dir/build.make:78: CMakeFiles/cmTC_b535e.dir/src.cxx.o] Error 1
+gmake[1]: Leaving directory '/home/gf/Desktop/ysyx/test_our/build/CMakeFiles/CMakeTmp'
+gmake: *** [Makefile:127: cmTC_b535e/fast] Error 2
+
+
+Source file was:
+int main() { return 0; }
+Performing C++ SOURCE FILE Test _mt failed with the following output:
+Change Dir: /home/gf/Desktop/ysyx/test_our/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_8beba/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_8beba.dir/build.make CMakeFiles/cmTC_8beba.dir/build
+gmake[1]: Entering directory '/home/gf/Desktop/ysyx/test_our/build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_8beba.dir/src.cxx.o
+/usr/bin/c++ -D_mt   -o CMakeFiles/cmTC_8beba.dir/src.cxx.o -c /home/gf/Desktop/ysyx/test_our/build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_8beba
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_8beba.dir/link.txt --verbose=1
+/usr/bin/c++ CMakeFiles/cmTC_8beba.dir/src.cxx.o -o cmTC_8beba  -mt 
+c++: error: unrecognized command-line option ‘-mt’; did you mean ‘-MT’?
+gmake[1]: *** [CMakeFiles/cmTC_8beba.dir/build.make:99: cmTC_8beba] Error 1
+gmake[1]: Leaving directory '/home/gf/Desktop/ysyx/test_our/build/CMakeFiles/CMakeTmp'
+gmake: *** [Makefile:127: cmTC_8beba/fast] Error 2
+
+
+Source file was:
+int main() {return 0;}
+

@@ -1,0 +1,3 @@
+/home/gf/Desktop/ysyx/test_our/build/CMakeFiles/Vour.dir
+/home/gf/Desktop/ysyx/test_our/build/CMakeFiles/edit_cache.dir
+/home/gf/Desktop/ysyx/test_our/build/CMakeFiles/rebuild_cache.dir
