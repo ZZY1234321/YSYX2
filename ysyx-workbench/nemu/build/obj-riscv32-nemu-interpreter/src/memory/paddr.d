@@ -3,13 +3,17 @@ cmd_/home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/build/obj-riscv32-nemu-inter
 source_/home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/build/obj-riscv32-nemu-interpreter/src/memory/paddr.o := src/memory/paddr.c
 
 deps_/home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/build/obj-riscv32-nemu-interpreter/src/memory/paddr.o := \
+    $(wildcard include/config/target/share.h) \
     $(wildcard include/config/pmem/malloc.h) \
     $(wildcard include/config/pmem/garray.h) \
     $(wildcard include/config/msize.h) \
     $(wildcard include/config/mbase.h) \
     $(wildcard include/config/mem/random.h) \
     $(wildcard include/config/mtrace.h) \
+    $(wildcard include/config/mtrace/start.h) \
+    $(wildcard include/config/mtrace/size.h) \
     $(wildcard include/config/device.h) \
+    $(wildcard include/config/ysyxsoc.h) \
   /home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/include/memory/host.h \
     $(wildcard include/config/isa64.h) \
     $(wildcard include/config/rt/check.h) \
@@ -24,8 +28,6 @@ deps_/home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/build/obj-riscv32-nemu-inte
   /home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/include/device/mmio.h \
   /home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/include/isa.h \
   /home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/src/isa/riscv32/include/isa-def.h \
-    $(wildcard include/config/rve.h) \
-    $(wildcard include/config/rv64.h) \
 
 /home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/build/obj-riscv32-nemu-interpreter/src/memory/paddr.o: $(deps_/home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/build/obj-riscv32-nemu-interpreter/src/memory/paddr.o)
 

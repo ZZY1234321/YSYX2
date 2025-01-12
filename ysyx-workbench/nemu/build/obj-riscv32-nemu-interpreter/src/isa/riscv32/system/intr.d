@@ -4,9 +4,8 @@ source_/home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/build/obj-riscv32-nemu-in
 
 deps_/home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/build/obj-riscv32-nemu-interpreter/src/isa/riscv32/system/intr.o := \
     $(wildcard include/config/etrace.h) \
-  src/isa/riscv32/system/../local-include/reg.h \
-    $(wildcard include/config/rt/check.h) \
-    $(wildcard include/config/rve.h) \
+  /home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/include/isa.h \
+  /home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/src/isa/riscv32/include/isa-def.h \
   /home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/include/common.h \
     $(wildcard include/config/target/am.h) \
     $(wildcard include/config/mbase.h) \
@@ -16,9 +15,8 @@ deps_/home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/build/obj-riscv32-nemu-inte
   /home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/include/debug.h \
   /home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/include/utils.h \
     $(wildcard include/config/target/native/elf.h) \
-  /home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/include/isa.h \
-  /home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/src/isa/riscv32/include/isa-def.h \
-    $(wildcard include/config/rv64.h) \
+  src/isa/riscv32/system/../local-include/reg.h \
+    $(wildcard include/config/rt/check.h) \
 
 /home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/build/obj-riscv32-nemu-interpreter/src/isa/riscv32/system/intr.o: $(deps_/home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/build/obj-riscv32-nemu-interpreter/src/isa/riscv32/system/intr.o)
 

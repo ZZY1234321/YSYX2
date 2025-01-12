@@ -19,36 +19,41 @@
  * Type 'man regex' for more information about POSIX regex functions.
  */
 #include <regex.h>
-#include <memory/vaddr.h>
 
-#define IS_BIN_OPERATOR(type) (type == TK_AND || type == TK_EQ || type == TK_NEQ || type == '+' || type == '-' || type == '*' || type == '/')
-#define IS_SIG_OPERATOR(type) (type == TK_DEREF || type == TK_POS || type == TK_NEG)
-#define NTOKEN 256
+#define DEBUG 0
+word_t vaddr_read(vaddr_t addr, int len);
 
 enum {
-  TK_NOTYPE = 256, TK_EQ, TK_NEQ,
-  TK_DEC, TK_BIN, TK_HEX,
-  TK_REG, TK_AND, TK_DEREF, TK_POS, TK_NEG
+  TK_NOTYPE = 256, TK_HEXNUM, TK_NUM, TK_REG, TK_EQ, TK_NOEQ, TK_AND, TK_OR,
+  TK_NEG, TK_POS, TK_DEREF
+
+  /* TODO: Add more token types */
+
 };
 
 static struct rule {
   const char *regex;
   int token_type;
 } rules[] = {
-  {"0[Xx][0-9a-fA-F]+", TK_HEX},          // hexadecimal integer
-  {"0[Bb][01]+", TK_BIN},                 // binary integer
-  {"[0-9]+", TK_DEC},                     // decimal integer
-  {"\\$[\\$a-z][0-9]{1,2}", TK_REG},      // access reg
-  {" +", TK_NOTYPE},                      // spaces
-  {"\\+", '+'},                           // plus | plus sign
-  {"\\-", '-'},                           // sub | minus sign
-  {"\\*", '*'},                           // mul | dereference
-  {"\\/", '/'},                           // div
-  {"\\(", '('},                           // left paren
-  {"\\)", ')'},                           // right paren
-  {"==", TK_EQ},                          // equal
-  {"!=", TK_NEQ},                         // not equal
-  {"&&", TK_AND}                          // and
+
+  /* TODO: Add more rules.
+   * Pay attention to the precedence level of different rules.
+   */
+
+  {" +", TK_NOTYPE},    // spaces
+  {"0[xX][0-9a-fA-F]+", TK_HEXNUM}, // numbers(hexadecimal)
+  {"[0-9]+", TK_NUM},   // numbers(demical)
+  {"\\$[$]?[0-9a-z]+", TK_REG}, // register
+  {"\\+", '+'},         // plus
+  {"\\-", '-'},         // subtract
+  {"\\*", '*'},         // multiply
+  {"\\/", '/'},         // divide
+  {"\\(", '('},         // left parentheses
+  {"\\)", ')'},         // right parentheses
+  {"==", TK_EQ},        // equal
+  {"!=", TK_NOEQ},      // not equal
+  {"&&", TK_AND},       // logic and
+  {"\\|\\|", TK_OR},    // logic or
 };
 
 #define NR_REGEX ARRLEN(rules)
@@ -77,7 +82,7 @@ typedef struct token {
   char str[32];
 } Token;
 
-static Token tokens[NTOKEN] __attribute__((used)) = {};
+static Token tokens[1024] __attribute__((used)) = {};
 static int nr_token __attribute__((used))  = 0;
 
 static bool make_token(char *e) {
@@ -93,30 +98,32 @@ static bool make_token(char *e) {
       if (regexec(&re[i], e + position, 1, &pmatch, 0) == 0 && pmatch.rm_so == 0) {
         char *substr_start = e + position;
         int substr_len = pmatch.rm_eo;
-
+#if DEBUG
         Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
             i, rules[i].regex, position, substr_len, substr_len, substr_start);
+#endif
+        position += substr_len;
+
+       	Assert(substr_len < sizeof(((Token*)NULL)->str), "%s", "the length of substring is too long!");
+	      Assert(nr_token < ARRLEN(tokens), "%s", "tokens are too many!");
+
+        /* TODO: Now a new token is recognized with rules[i]. Add codes
+         * to record the token in the array `tokens'. For certain types
+         * of tokens, some extra actions should be performed.
+         */
 
         switch (rules[i].token_type) {
-          case TK_NOTYPE:
-            break;
-
-          case TK_DEC: case TK_BIN: case TK_HEX: case TK_REG:
-            assert(substr_len < 32);
-            assert(nr_token < NTOKEN);
+          case TK_NOTYPE: break;
+          case TK_HEXNUM: case TK_NUM: case TK_REG: {
+            memset(tokens[nr_token].str, '\0', sizeof(tokens[nr_token].str));
+            strncpy(tokens[nr_token].str, substr_start, substr_len);
+          }
+          default: {
             tokens[nr_token].type = rules[i].token_type;
-            strncpy(tokens[nr_token].str, e + position, substr_len);
-            tokens[nr_token].str[substr_len] = '\0';
-            nr_token++;
+            nr_token ++;
             break;
-
-          default: 
-            assert(nr_token < NTOKEN);
-            tokens[nr_token++].type = rules[i].token_type;
-            break;
+          }
         }
-
-        position += substr_len;
         break;
       }
     }
@@ -130,183 +137,185 @@ static bool make_token(char *e) {
   return true;
 }
 
-static word_t str_to_num(char *str, bool *success) {
-  word_t val = 0;
-  char *endptr;
 
-  if(str[0] == '0' && (str[1] == 'x' || str[1] == 'X'))
-    val = strtol(str + 2, &endptr, 16);
-  else if(str[0] == '0' && (str[1] == 'b' || str[1] == 'B'))
-    val = strtol(str + 2, &endptr, 2);
-  else 
-    val = strtol(str, &endptr, 10);
-    
-  if(*endptr != '\0') {
-    *success = false;
-    return 0;
+#if DEBUG
+static char *typeshow(int type) {
+  static char tmp[20];
+  switch (type)
+  {
+  //case TK_NOTYPE: strcpy(tmp, "Space"); break;
+  case TK_NUM: strcpy(tmp, "NUM"); break;
+  case TK_HEXNUM: strcpy(tmp, "HEX"); break;
+  case TK_REG: strcpy(tmp, "REG"); break;
+  case TK_NEG: strcpy(tmp, "NEG"); break;
+  case TK_DEREF: strcpy(tmp, "REF"); break;
+  case '+': strcpy(tmp, "'+'"); break;
+  case '-': strcpy(tmp, "'-'"); break;
+  case '*': strcpy(tmp, "'*'"); break;
+  case '/': strcpy(tmp, "'/'"); break;
+  case '(': strcpy(tmp, "'('"); break;
+  case ')': strcpy(tmp, "')'"); break;
+  case '!': strcpy(tmp, "NOT"); break;
+  case TK_EQ: strcpy(tmp, "EQU"); break;
+  case TK_NOEQ: strcpy(tmp, "NEQ"); break;
+  case TK_AND: strcpy(tmp, "AND"); break;
+  case TK_OR: strcpy(tmp, "OR"); break;
+  default: break;
   }
-
-  return val;
+  return tmp;
 }
 
-static word_t access_reg(char *str, bool *success) {
-  assert(str[0] == '$');
-  word_t val = isa_reg_str2val(str + 1, success);
-  return val;
-}
-
-/*
-priority
-  *        deference
-  +  -     sign
-  /  *     div and mul
-  +  -     add and sub
-  == !=   equal and not equal
-  &&       and
-*/
-
-// Return the priority of the binary operators
-static int get_priority(int type) {
-  switch (type) {
-    case TK_AND:
-      return 0;
-    case TK_EQ: case TK_NEQ:
-      return 1;
-    case '+': case '-':
-      return 2;
-    case '*': case '/':
-      return 3;
-    default:
-      assert(0);
+static void print_expr() {
+  for(int i = 0; i< nr_token; i ++) {
+    if(i == nr_token - 1) printf("+-----+\n");
+    else printf("+-----");
   }
-
-  return 0;
-}
-
-// Find the operator with the lowest precedence in the expression
-static int get_op(int l, int r, bool *success) {
-  // Prioritize the search for binary operators
-
-  int p = l, op = -1;
-  int cnt_leftparen = 0;
-
-  // Ignore operators within parentheses
-  for(int i = l; i <= r; ++i) {
-    int type = tokens[i].type;
-
-    if(type == '(') {
-      cnt_leftparen++;
+  for(int i = 0; i< nr_token; i ++) {
+    if(i == nr_token - 1) printf("| [%d] |\n", i);
+    else printf("| [%d] ", i);
+  }
+  for(int i = 0; i< nr_token; i ++) {
+    if(i == nr_token - 1) printf("| %s |\n", typeshow(tokens[i].type));
+    else printf("| %s ", typeshow(tokens[i].type));
+  }
+  for(int i = 0; i< nr_token; i ++) {
+    if(strcmp(typeshow(tokens[i].type), "NUM") == 0) {
+      if(i == nr_token - 1) printf("|  %s  |\n", tokens[i].str);
+      else printf("|  %s  ", tokens[i].str);
     }
-    else if(type == ')') {
-      cnt_leftparen--;
+    else if(strcmp(typeshow(tokens[i].type), "HEX") == 0) {
+      if(i == nr_token - 1) printf("| %s |\n", tokens[i].str);
+      else printf("| %s ", tokens[i].str);
     }
-    else if(IS_BIN_OPERATOR(type)) {
-      if(cnt_leftparen == 0 && (op == -1 || get_priority(type) <= get_priority(op))) {
-        p = i;
-        op = type;
-      }
+    else if(strcmp(typeshow(tokens[i].type), "REG") == 0) {
+      if(i == nr_token - 1) printf("| %s |\n", tokens[i].str);
+      else printf("| %s ", tokens[i].str);
+    }
+    else {
+      if(i == nr_token -1) printf("|     |\n");
+      else printf("|     ");
     }
   }
-
-  //If there are no binary operators in the expression
-  if(op == -1 && IS_SIG_OPERATOR(tokens[l].type))
-    p = l;
-  else if(op == -1) 
-    *success = false;
-
-  return p;
+  for(int i = 0; i< nr_token; i ++) {
+    if(i == nr_token - 1) printf("+-----+\n");
+    else printf("+-----");
+  }
 }
+#endif
 
-static bool check_parentheses(int l, int r) {
-  if(tokens[l].type != '(' || tokens[r].type != ')')
+static bool check_parentheses(int p, int q){
+  if(tokens[p].type!='('||tokens[q].type!=')')
     return false;
-
-  int cnt_leftparen = 0;
-
-  for(int i = l; i < r; ++i) {
-    if(tokens[i].type == '(')
-      cnt_leftparen++;
-    else if(tokens[i].type == ')')
-      cnt_leftparen--;
-      
-    if(cnt_leftparen == 0)
+  int count=0;
+  for(int i=p;i<=q;i++){
+    if(tokens[i].type=='(')
+      count++;
+    else if(tokens[i].type==')')
+      count--;
+    if(count == 0 && i < q)
       return false;
   }
-
+  if(count!=0)
+    return false;
   return true;
 }
 
-static word_t eval(int l, int r, bool *success) {
-  if (l > r) {
-    *success = false;
+
+static int op_priority(int type){
+  switch(type){
+    case TK_POS: case TK_NEG: return 1;
+    case TK_DEREF: return 2;
+    case '*': case '/': return 3;
+    case '+': case '-': return 4;
+    case TK_EQ: case TK_NOEQ: return 5;
+    case TK_AND: return 6;
+    case TK_OR: return 7;
+    default: return 0;
+  }
+  return 0;
+}
+static int dominant_op(int p, int q) {
+  int count = 0;
+  int op = -1; // unary operator
+  int priority = 0;
+  for(int i = p; i <= q; i ++) {
+    if(tokens[i].type == '(') count ++;
+    if(tokens[i].type == ')') count --;
+    if(count != 0) continue;
+
+    int cur_pri = op_priority(tokens[i].type);
+    if(cur_pri) {
+      if(cur_pri > 2 && cur_pri >= priority) {
+        op = i;
+        priority = cur_pri;
+      } else if(cur_pri <= 2 && priority <= 2) {
+        op = i;
+        priority = cur_pri;
+        break; // stop the loop when the first unary operator is found
+      }
+    }
+  }
+  return op;
+}
+
+static word_t eval(int p, int q, bool *success) {
+  if(p > q){
+    *success=false;
     return 0;
   }
-  else if (l == r) {
-    if(tokens[l].type != TK_BIN && tokens[l].type != TK_DEC && tokens[l].type != TK_HEX && tokens[l].type != TK_REG) {
-      *success = false;
-      return 0;
+  if(p == q) {
+    word_t num = 0;
+    switch(tokens[p].type) {
+      case TK_HEXNUM: sscanf(tokens[p].str, "%x", &num); break;
+      case TK_NUM: sscanf(tokens[p].str, "%u", &num); break;
+      case TK_REG: num = isa_reg_str2val(tokens[p].str, success); break;
+      default: *success = false; break;
     }
-    return (tokens[l].type == TK_REG ? access_reg(tokens[l].str, success) : str_to_num(tokens[l].str, success));
+    return num;
   }
-  else if (check_parentheses(l, r)) {
-    return eval(l + 1, r - 1, success);
+  else if(check_parentheses(p, q) == true) {
+    return eval(p + 1, q - 1, success);
   }
   else {
-    int op = get_op(l, r, success);
-  
-    if(op == l) { // unary operator
-      word_t val = eval(op + 1, r, success);
+    int op = dominant_op(p, q);
+#if DEBUG
+    Log("dominant_op: %d", op);
+#endif
+    if(op != -1) {
+      word_t val1 = 0, val2 = 0;
+      if(tokens[op].type != TK_POS && tokens[op].type != TK_NEG && tokens[op].type != TK_DEREF )
+        val1 = eval(p, op - 1, success);
+      val2 = eval(op + 1, q, success);
       switch (tokens[op].type) {
-        case TK_POS: 
-          return val;
-        case TK_NEG: 
-          return -val;
-        case TK_DEREF: 
-          return vaddr_read(val, 4);
-        default: 
-          assert(0);
+        case '+': return val1 + val2;
+        case '-': return val1 - val2;
+        case '*': return val1 * val2;
+        case '/': {
+          if(val2 == 0) {
+            Log(ANSI_FG_RED"Divided by zero!"ANSI_NONE);
+            *success = false;
+            return 0;
+          }
+          else return val1 / val2;
+        }
+        case '(':
+        case ')': *success=false; return 0;
+        case TK_AND: return val1 && val2;
+        case TK_OR: return val1 || val2;
+        case TK_EQ: return val1 == val2;
+        case TK_NOEQ: return val1 != val2;
+        case TK_POS: return val2;
+        case TK_NEG: return -val2;
+        case TK_DEREF: return vaddr_read(val2, 4);
+        default: *success = false; return 0;
       }
     }
     else {
-      word_t val1 = eval(l, op - 1, success);
-      word_t val2 = eval(op + 1, r, success);
-
-      switch (tokens[op].type) {
-        case '+': 
-          return val1 + val2;
-        case '-': 
-          return val1 - val2;
-        case '*': 
-          return val1 * val2;
-        case '/': 
-          return val1 / val2;
-        case TK_AND : 
-          return val1 && val2;
-        case TK_EQ : 
-          return val1 == val2;
-        case TK_NEQ : 
-          return val1 != val2;
-        default: 
-          assert(0);
-      }
+      *success = false;
+      return 0;
     }
   }
-
   return 0;
-}
-
-static void token_processing() {
-  for (int i = 0; i < nr_token; i++) {
-    if (tokens[i].type == '*' && (i == 0 || IS_BIN_OPERATOR(tokens[i - 1].type) ||  IS_SIG_OPERATOR(tokens[i - 1].type) || tokens[i - 1].type == '(')) {
-      tokens[i].type = TK_DEREF;
-    }
-    else if (tokens[i].type == '+' && (i == 0 || IS_BIN_OPERATOR(tokens[i - 1].type) ||  IS_SIG_OPERATOR(tokens[i - 1].type) || tokens[i - 1].type == '(')) {
-      tokens[i].type = TK_POS;
-    }
-    else if (tokens[i].type == '-' && (i == 0 || IS_BIN_OPERATOR(tokens[i - 1].type) ||  IS_SIG_OPERATOR(tokens[i - 1].type) || tokens[i - 1].type == '(')) {
-      tokens[i].type = TK_NEG;
-    }
-  } 
 }
 
 word_t expr(char *e, bool *success) {
@@ -314,33 +323,22 @@ word_t expr(char *e, bool *success) {
     *success = false;
     return 0;
   }
-
-  token_processing();
-  word_t res = eval(0, nr_token - 1, success);
-  return res;
-}
-
-void expr_test() {
-  FILE *fp_in = fopen("tools/gen-expr/input.txt", "r");
-  FILE *fp_out = fopen("output.txt", "w");
-  assert(fp_in != NULL);
-  assert(fp_out != NULL);
-
-  char expression[65536];
-  unsigned right_ans;
-  for(int i = 0; i < 1000; ++i) {
-    if(fscanf(fp_in, "%u %s", &right_ans, expression) != 2) 
-      break;
-
-    bool success = true;
-    word_t res = expr(expression, &success);
-    
-    if(!success || (res != right_ans)) 
-      fprintf(fp_out, "%d fali: flag: %d my_res:%u right_ans:%u expr:%s\n", i, success, res, right_ans, expression);
-    else  
-      fprintf(fp_out, "%d ok\n", i);
+  for(int i = 0; i < nr_token; i ++) {
+    if(tokens[i].type == '+' && (i==0 || (tokens[i-1].type != TK_HEXNUM && tokens[i-1].type != TK_NUM && tokens[i-1].type != TK_REG && tokens[i-1].type != ')'))) {
+      tokens[i].type = TK_POS;
+    }
+    if(tokens[i].type == '-' && (i==0 || (tokens[i-1].type != TK_HEXNUM && tokens[i-1].type != TK_NUM && tokens[i-1].type != TK_REG && tokens[i-1].type != ')'))) {
+      tokens[i].type = TK_NEG;
+    }
+    if(tokens[i].type == '*' && (i==0 || (tokens[i-1].type != TK_HEXNUM && tokens[i-1].type != TK_NUM && tokens[i-1].type != TK_REG && tokens[i-1].type != ')'))) {
+      tokens[i].type = TK_DEREF;
+    }
   }
 
-  fclose(fp_in);
-  fclose(fp_out);
+#if DEBUG
+  print_expr();
+#endif
+
+  return eval(0, nr_token - 1, success);
 }
+

@@ -1,7 +1,6 @@
 deps_config := \
 	src/device/Kconfig \
 	src/memory/Kconfig \
-	src/isa/riscv32/Kconfig \
 	/home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/Kconfig
 
 include/config/auto.conf: \

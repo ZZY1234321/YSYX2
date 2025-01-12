@@ -18,20 +18,13 @@
 #include "../local-include/reg.h"
 
 bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
-  bool flag = true;
-
-  if(ref_r->pc != cpu.pc) {
-    printf("\ndut-pc : " FMT_PADDR "  ref-pc : " FMT_PADDR "\n", cpu.pc, ref_r->pc);
-    flag = false; 
+  bool ret = true;
+  for(int i=0; i<32; i++) {
+    ret = difftest_check_reg(reg_name(i, 32), pc, ref_r->gpr[i] , cpu.gpr[i]);
+    if(!ret) return ret;
   }
-  
-  for(int i = 0; i < RISCV_GPR_NUM; ++i)
-    if(ref_r->gpr[check_reg_idx(i)] != gpr(i)) {
-      printf("dut-%-3s: " FMT_WORD "  ref-%-3s: " FMT_WORD "\n", reg_name(i), gpr(i), reg_name(i), ref_r->gpr[i]);
-      flag = false;
-    }
-  
-  return flag;
+  ret = difftest_check_reg("pc", pc, ref_r->pc, cpu.pc);
+  return ret;
 }
 
 void isa_difftest_attach() {

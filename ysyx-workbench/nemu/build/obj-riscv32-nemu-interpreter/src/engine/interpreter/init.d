@@ -4,7 +4,6 @@ source_/home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/build/obj-riscv32-nemu-in
 
 deps_/home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/build/obj-riscv32-nemu-interpreter/src/engine/interpreter/init.o := \
     $(wildcard include/config/target/am.h) \
-    $(wildcard include/config/ftrace.h) \
   /home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/include/cpu/cpu.h \
   /home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/include/common.h \
     $(wildcard include/config/mbase.h) \

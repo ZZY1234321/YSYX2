@@ -16,14 +16,13 @@ deps_/home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/build/obj-riscv32-nemu-inte
   /home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/include/memory/vaddr.h \
   /home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/include/isa.h \
   /home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/src/isa/riscv32/include/isa-def.h \
-    $(wildcard include/config/rve.h) \
-    $(wildcard include/config/rv64.h) \
   /home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/include/cpu/difftest.h \
     $(wildcard include/config/difftest.h) \
   /home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/include/difftest-def.h \
     $(wildcard include/config/isa/x86.h) \
     $(wildcard include/config/isa/mips32.h) \
-    $(wildcard include/config/isa/riscv.h) \
+    $(wildcard include/config/isa/riscv32.h) \
+    $(wildcard include/config/isa/riscv64.h) \
     $(wildcard include/config/isa/loongarch32r.h) \
 
 /home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/build/obj-riscv32-nemu-interpreter/src/engine/interpreter/hostcall.o: $(deps_/home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/build/obj-riscv32-nemu-interpreter/src/engine/interpreter/hostcall.o)

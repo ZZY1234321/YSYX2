@@ -16,7 +16,6 @@
 #include <cpu/cpu.h>
 
 void sdb_mainloop();
-void ftrace_display();
 
 void engine_start() {
 #ifdef CONFIG_TARGET_AM
@@ -25,6 +24,4 @@ void engine_start() {
   /* Receive commands from user. */
   sdb_mainloop();
 #endif
-
-  IFDEF(CONFIG_FTRACE, ftrace_display());
 }

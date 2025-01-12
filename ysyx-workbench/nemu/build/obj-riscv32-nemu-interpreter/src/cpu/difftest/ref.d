@@ -5,8 +5,6 @@ source_/home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/build/obj-riscv32-nemu-in
 deps_/home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/build/obj-riscv32-nemu-interpreter/src/cpu/difftest/ref.o := \
   /home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/include/isa.h \
   /home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/src/isa/riscv32/include/isa-def.h \
-    $(wildcard include/config/rve.h) \
-    $(wildcard include/config/rv64.h) \
   /home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/include/common.h \
     $(wildcard include/config/target/am.h) \
     $(wildcard include/config/mbase.h) \
@@ -20,7 +18,8 @@ deps_/home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/build/obj-riscv32-nemu-inte
   /home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/include/difftest-def.h \
     $(wildcard include/config/isa/x86.h) \
     $(wildcard include/config/isa/mips32.h) \
-    $(wildcard include/config/isa/riscv.h) \
+    $(wildcard include/config/isa/riscv32.h) \
+    $(wildcard include/config/isa/riscv64.h) \
     $(wildcard include/config/isa/loongarch32r.h) \
   /home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/include/memory/paddr.h \
     $(wildcard include/config/pc/reset/offset.h) \

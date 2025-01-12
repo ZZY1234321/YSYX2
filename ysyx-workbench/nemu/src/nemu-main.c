@@ -18,16 +18,51 @@
 void init_monitor(int, char *[]);
 void am_init_monitor();
 void engine_start();
-void expr_test();
 int is_exit_status_bad();
 
-int main(int argc, char *argv[]) {
-  /* Test expr. */
-#ifdef CONFIG_EXPRTEST
-  expr_test();
-  return 0;
-#endif
+#define TEST_EXPR 0
 
+#if TEST_EXPR
+word_t expr(char *e, bool *success);
+void init_regex();
+void test_expr() {
+  char line[256];
+  FILE *file = fopen("/tmp/.input", "r");
+
+  if (file == NULL) {
+    printf("Could not open file input\n");
+    return;
+  }
+
+  while (fgets(line, sizeof(line), file)) {
+    char *expected_str = strtok(line, " ");
+    char *expr_str = strtok(NULL, "\n");
+
+    bool success = true;
+    int expected = atoi(expected_str);
+    int result = expr(expr_str, &success);
+
+    if (success) {
+        printf("Expression: %s, Expected: %d, Got: %d\n", expr_str, expected, result);
+        if (expected != result) {
+            printf("Test failed!\n");
+            assert(0);
+        }
+    } else {
+        printf("Failed to evaluate expression: %s\n", expr_str);
+    }
+  }
+
+  fclose(file);
+}
+
+int main(int argc, char *argv[]) {
+  init_monitor(argc, argv); 
+  test_expr();
+  return 0;
+}
+#else
+int main(int argc, char *argv[]) {
   /* Initialize the monitor. */
 #ifdef CONFIG_TARGET_AM
   am_init_monitor();
@@ -40,3 +75,4 @@ int main(int argc, char *argv[]) {
 
   return is_exit_status_bad();
 }
+#endif

@@ -3,11 +3,11 @@ cmd_/home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/build/obj-riscv32-nemu-inter
 source_/home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/build/obj-riscv32-nemu-interpreter/src/utils/log.o := src/utils/log.c
 
 deps_/home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/build/obj-riscv32-nemu-interpreter/src/utils/log.o := \
-    $(wildcard include/config/target/am.h) \
     $(wildcard include/config/trace.h) \
     $(wildcard include/config/trace/start.h) \
     $(wildcard include/config/trace/end.h) \
   /home/gf/Desktop/ysyx/ysyx2/ysyx-workbench/nemu/include/common.h \
+    $(wildcard include/config/target/am.h) \
     $(wildcard include/config/mbase.h) \
     $(wildcard include/config/msize.h) \
     $(wildcard include/config/isa64.h) \

@@ -17,16 +17,14 @@
 #include <cpu/cpu.h>
 #include <readline/readline.h>
 #include <readline/history.h>
-#include <memory/vaddr.h>
 #include "sdb.h"
+#include "watchpoint.h"
 
 static int is_batch_mode = false;
 
 void init_regex();
 void init_wp_pool();
-void add_wp(char*, word_t);
-void free_wp(int);
-void wp_display();
+word_t vaddr_read(vaddr_t addr, int len);
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 static char* rl_gets() {
@@ -57,13 +55,108 @@ static int cmd_q(char *args) {
   return -1;
 }
 
+static int cmd_si(char* args) {
+  char* arg = strtok(NULL, " ");
+  int steps;
+
+  if (arg == NULL) {
+      cpu_exec(1);
+      return 0;
+  }
+  sscanf(arg, "%d", &steps);
+
+  cpu_exec(steps);
+  return 0;
+}
+
+static int cmd_info(char* args) {
+  char* arg = strtok(NULL, " ");
+  if (arg == NULL) {
+      Log("Missing parameter r or w");
+      return 0;
+  }
+  if (strcmp(arg, "r") == 0) {
+      isa_reg_display();
+  }
+  if (strcmp(arg, "w") == 0) {
+      print_wp();
+  }
+  return 0;
+}
+
+static int cmd_x(char* args) {
+  char* N = strtok(NULL, " ");
+  char* EXPR = strtok(NULL, " ");
+  int num;
+  bool success = true;
+  vaddr_t addr;
+  if (N == NULL || EXPR == NULL) {
+      Log("Need two parameters N and EXPR");
+      return 0;
+  }
+  sscanf(N, "%d", &num);
+  // sscanf(EXPR, "%x", &addr);
+  addr = expr(EXPR, &success);
+  if(success) {
+    for (int i = 0; i < num; i++) {
+        word_t data = vaddr_read(addr + i * 4, 4);
+        printf("addr: " FMT_PADDR, addr + i * 4);
+        printf("\tdata: " FMT_WORD, data);
+        printf("\n");
+    }
+  }
+  else
+    Log(ANSI_FG_RED"EXPR is illegal!"ANSI_NONE);
+  return 0;
+}
+
+static int cmd_p(char* args) {
+  bool success = true;
+  if (args == NULL) {
+      Log("Need parameter EXPR");
+      return 0;
+  }
+  word_t ans = expr(args, &success);
+  if (success) {
+      Log(ANSI_FG_GREEN"Successfully evaluate the EXPR!"ANSI_NONE);
+      Log(ANSI_FG_MAGENTA"EXPR: %s"ANSI_NONE, args);
+      Log(ANSI_FG_MAGENTA"ANSWER:\n[Dec] unsigned: %u signed: %d\n[Hex]"FMT_WORD ANSI_NONE, ans, ans, ans);
+  } else
+      Log(ANSI_FG_RED"EXPR is illegal!"ANSI_NONE);
+  return 0;
+}
+
+static int cmd_w(char* args) {
+  if (args == NULL) {
+      Log(ANSI_FG_RED"Missing parameter EXPR"ANSI_NONE);
+      return 0;
+  }
+  WP* wp = new_wp(args);
+  Log("watchpoint %d: %s is set!", wp->NO, wp->e);
+  return 0;
+}
+
+static int cmd_d(char* args) {
+  if (args == NULL) {
+      Log(ANSI_FG_RED"Missing parameter N"ANSI_NONE);
+      return 0;
+  }
+  int N;
+  bool search = true;
+  sscanf(args, "%d", &N);
+  WP* wp = delete_wp(N, &search);
+  if (search) {
+      Log("Delete watchpoint %d: %s", wp->NO, wp->e);
+      free_wp(wp);
+      return 0;
+  } else {
+      Log(ANSI_FG_RED"Can't find watchpoint %d"ANSI_NONE, N);
+      return 0;
+  }
+  return 0;
+}
+
 static int cmd_help(char *args);
-static int cmd_si(char *args);
-static int cmd_info(char *args);
-static int cmd_x(char *args);
-static int cmd_p(char *args);
-static int cmd_w(char *args);
-static int cmd_d(char *args);
 
 static struct {
   const char *name;
@@ -73,12 +166,15 @@ static struct {
   { "help", "Display information about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
-  { "si", "Execute n(default n=1) instructions in single steps of the program", cmd_si },
-  { "info", "Get infomation about the program", cmd_info },
-  { "x", "Scan the memory", cmd_x },
-  { "p", "Evaluate an expression", cmd_p },
-  { "w", "Set watchpoint", cmd_w },
-  { "d", "Delete watchpoint", cmd_d }
+  {"si", "Step over, default N=1", cmd_si},
+  {"info", "info r: print register info; info w: print watchpoint info", cmd_info},
+  {"x", "x N EXPR: print N * 4 bytes info in mem from addr=EXPR", cmd_x},
+  {"p", "p EXPR: evaluate the expression", cmd_p},
+  {"w", "w EXPR: set a watchpoint on the value of EXPR", cmd_w},
+  {"d", "d N: delete the watchpoint with N", cmd_d},
+
+  /* TODO: Add more commands */
+
 };
 
 #define NR_CMD ARRLEN(cmd_table)
@@ -103,108 +199,6 @@ static int cmd_help(char *args) {
     }
     printf("Unknown command '%s'\n", arg);
   }
-  return 0;
-}
-
-static int cmd_si(char *args) {
-  if(args == NULL)
-    cpu_exec(1);
-  else {
-    int step;
-    int t = sscanf(args, "%d", &step);
-
-    if(t == 1)
-      cpu_exec(step);
-    else 
-      printf("Usage: si [N]\n");
-  }
-  return 0;
-}
-
-static int cmd_info(char *args) {
-  if(args == NULL) {
-    printf("Usage: info SUBCMD\n");
-    return 0;
-  }
-
-  char type = 0;
-  sscanf(args, "%c", &type);
-
-  if(type == 'r') {
-    isa_reg_display();
-  } else if(type == 'w') {
-    wp_display();
-  } else {
-    printf("Unknown argument %s\n", args);
-  } 
-  return 0;
-}
-
-static int cmd_x(char *args) {
-  if(args == NULL) {
-    printf("Usage: x N EXPR\n");
-    return 0;
-  }
-
-  int n;
-  char expression[128];
-  int t = sscanf(args, "%d %[^\n]", &n, expression);
-
-  if(t == 2) {
-    bool success = true;
-    vaddr_t addr = expr(expression, &success);
-
-    if(success) {
-      for(int i = 0; i < n; i++) {
-        word_t val = vaddr_read(addr, 4);
-        printf("0x%08x: %08x\n", addr, val);
-        addr += 4;
-      }
-    }
-    else 
-      printf("x: please give a proper expression\n");
-  }
-  else 
-    printf("Usage: x N EXPR\n");
-  
-  return 0;
-}
-
-static int cmd_p(char *args) {
-  char *expression = args;
-  bool success = true;
-  word_t ans = expr(expression, &success);
-
-  if(success)
-    printf("%s = %u\n", expression, ans);
-  else
-    printf("p: please give a proper expression\n");
-
-  return 0;
-}
-
-static int cmd_w(char *args) {
-  char *expression = args;
-  bool success = true;
-  word_t val = expr(expression, &success);
-
-  if(success)
-    add_wp(expression, val);
-  else 
-    printf("w: please give a proper expression\n");
-
-  return 0;
-}
-
-static int cmd_d(char *args) {
-  int n;
-  int t = sscanf(args, "%d", &n);
-
-  if(t == 1) 
-    free_wp(n);
-  else 
-    printf("Usage: d N\n");
-
   return 0;
 }
 
